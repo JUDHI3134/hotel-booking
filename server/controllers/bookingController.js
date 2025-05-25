@@ -1,4 +1,5 @@
 import Booking from "../models/Booking.js"
+import Hotel from "../models/Hotel.js";
 import Room from "../models/Room.js";
 
 
@@ -94,5 +95,25 @@ export const getUserBookings = async (req, res) => {
     }
 }
 
+//dashboard data
+export const getHotelBookings = async (req, res) => {
+    try {
+        const hotel = await Hotel.findOne({ owner: req.auth.userId });
+        if (!hotel) {
+            return res.json({success: false, messahe:"No hotel Found"})
+        }
 
+        const bookings = await Booking.find({hotel: hotel._id}).populate("room hotel user").sort({createdAt: -1})
 
+        //total bookings
+        const totalBookings = bookings.length
+        //total revenue
+        const totalRevenue = bookings.reduce((acc, booking) => acc + booking.totalPrice, 0)
+        
+        res.json({success: true, dashboardData: {totalBookings, totalRevenue, bookings}})
+
+    } catch (error) {
+       console.log(error)
+        res.json({success: false, message: "Failed to fetch bookings"}) 
+    }
+}
