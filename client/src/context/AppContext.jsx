@@ -1,11 +1,11 @@
 import axios from "axios"
-import { createContext, use, useContext, useState } from "react";
+import { createContext, use, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom"
 import { useUser, useAuth } from "@clerk/clerk-react"
+import {toast} from "react-hot-toast"
 
 
 axios.defaults.baseURL = import.meta.env.VITE_BACKEND_URL;
-
 
 const AppContext = createContext();
 
@@ -18,9 +18,34 @@ export const AppProvider = ({ children }) => {
     
     const [isOwner, setIsOwner] = useState(false)
     const [showHotelReg, setShowHotelReg] = useState(false)
+    const [searchedCities, setSearchedCities] = useState([])
+
+    //fetch user
+    const fetchUser = async () => {
+        try {
+            const { data } = await axios.get("/api/user", { headers: { Authorization: `Bearer ${await getToken()}` } })
+            if (data.success) {
+                setIsOwner(data.role === "hotelOwner")
+                setSearchedCities(data.recentSearchedCities)
+            } else {
+                //retrying fetching user details after 5 sec
+                setTimeout(() => {
+                    fetchUser()
+                },5000)
+            }
+        } catch (error) {
+            toast.error(error.message)
+        }
+    }
+
+    useEffect(() => {
+        if (user) {
+            fetchUser()
+        }
+    },[user])
 
     const value = {
-        currency, navigate, user, getToken, isOwner, setIsOwner, axios, showHotelReg, setShowHotelReg
+        currency, navigate, user, getToken, isOwner, setIsOwner, axios, showHotelReg, setShowHotelReg, searchedCities, setSearchedCities
     }
     
     return (
