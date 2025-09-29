@@ -30,7 +30,7 @@ const HotelReg = () => {
             console.log("Token being sent:", await getToken());
             
         } catch (error) {
-            toast.error(error)
+            toast.error(error.message)
             console.log(error)
         }
     }
